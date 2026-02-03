@@ -50,48 +50,8 @@
     <!-- Библиотека для генерации матрицы -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
 
-    <!-- Наш основной код -->
-    <script type="module">
-        import { generateMatrix } from "./js/qrMatrix.js";
-        import { renderMatrixToPng } from "./js/qrRenderer.js";
-
-        const input = document.getElementById("urlInput");
-        const generateBtn = document.getElementById("generateBtn");
-        const downloadBtn = document.getElementById("downloadBtn");
-        const qrBox = document.getElementById("qr");
-
-        let lastPngDataUrl = null;
-
-        generateBtn.onclick = () => {
-            const text = input.value.trim();
-            if (!text) return;
-
-            try {
-                const matrix = generateMatrix(text);
-                const png = renderMatrixToPng(matrix, 150);
-
-                lastPngDataUrl = png;
-
-                qrBox.innerHTML = `<img src="${png}" alt="QR code">`;
-
-                generateBtn.style.display = "none";
-                downloadBtn.style.display = "block";
-
-            } catch (err) {
-                console.error(err);
-                alert("Ошибка при генерации QR-кода");
-            }
-        };
-
-        downloadBtn.onclick = () => {
-            if (!lastPngDataUrl) return;
-
-            const a = document.createElement("a");
-            a.href = lastPngDataUrl;
-            a.download = "qr.png";
-            a.click();
-        };
-    </script>
+    <!-- Наш основной модуль -->
+    <script type="module" src="./js/main.js"></script>
 
 </body>
 </html>
