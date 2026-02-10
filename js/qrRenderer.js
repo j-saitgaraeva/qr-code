@@ -17,10 +17,18 @@ export async function renderMatrixToPng(matrix, sizePx) {
     canvas.height = sizePx;
     const ctx = canvas.getContext("2d");
 
-    // 1. Рисуем обычные модули QR
+    // 1. Рисуем QR без глазков
     ctx.fillStyle = "#000";
     for (let r = 0; r < modules; r++) {
         for (let c = 0; c < modules; c++) {
+
+            // Пропускаем зоны глазков (8×8)
+            const inTopLeft = r < 8 && c < 8;
+            const inTopRight = r < 8 && c >= modules - 8;
+            const inBottomLeft = r >= modules - 8 && c < 8;
+
+            if (inTopLeft || inTopRight || inBottomLeft) continue;
+
             if (matrix[r][c] === 1) {
                 ctx.fillRect(
                     Math.round(c * scale),
@@ -35,10 +43,11 @@ export async function renderMatrixToPng(matrix, sizePx) {
     // 2. Загружаем SVG глазок
     const eye = await loadSvg("./js/eyes/eye.svg");
 
-    // Размер глазка = 8 модулей (с рамкой)
+    // Размер глазка = 8 модулей
     const eyePx = 8 * scale;
 
-    // 3. Рисуем три глазка поверх QR
+    // 3. Рисуем три глазка
+
     // Левый верхний
     ctx.drawImage(eye, 0, 0, eyePx, eyePx);
 
