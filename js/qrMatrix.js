@@ -1,5 +1,5 @@
 export function generateMatrix(text) {
-    const qr = qrcode(4, "M"); // фиксированная версия 4 (33×33)
+    const qr = qrcode(4, "M"); // версия 4 = 33×33
     qr.addData(text);
     qr.make();
 
