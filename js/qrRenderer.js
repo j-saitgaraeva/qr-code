@@ -44,18 +44,28 @@ export async function renderMatrixToPng(matrix, sizePx) {
     const eye = await loadSvg("./js/eyes/eye.svg");
 
     // Размер зоны глазка = 8 модулей
-    const eyePx = 8 * scale;
+    // Уменьшаем глазок на 10% для идеальной посадки
+    const eyePx = 8 * scale * 0.9;
+
+    // Смещение, чтобы глазок был по центру зоны
+    const offset = (8 * scale - eyePx) / 2;
 
     // 3. Рисуем глазки строго по сетке QR
 
     // Левый верхний
-    ctx.drawImage(eye, 0, 0, eyePx, eyePx);
+    ctx.drawImage(
+        eye,
+        offset,
+        offset,
+        eyePx,
+        eyePx
+    );
 
     // Правый верхний
     ctx.drawImage(
         eye,
-        (modules - 8) * scale,
-        0,
+        (modules - 8) * scale + offset,
+        offset,
         eyePx,
         eyePx
     );
@@ -63,8 +73,8 @@ export async function renderMatrixToPng(matrix, sizePx) {
     // Левый нижний
     ctx.drawImage(
         eye,
-        0,
-        (modules - 8) * scale,
+        offset,
+        (modules - 8) * scale + offset,
         eyePx,
         eyePx
     );
