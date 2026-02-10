@@ -1,5 +1,5 @@
-import { generateMatrix } from "./js/qrMatrix.js";
-import { renderMatrixToPng } from "./js/qrRenderer.js";
+import { generateMatrix } from "./qrMatrix.js";
+import { renderMatrixToPng } from "./qrRenderer.js";
 
 const input = document.getElementById("urlInput");
 const generateBtn = document.getElementById("generateBtn");
