@@ -10,7 +10,6 @@ async function loadSvg(url) {
 export async function renderQR(ctx, matrix) {
     const modules = matrix.length;
 
-    // Модуль строго 5 px
     const moduleSize = 5;
     const canvasSize = modules * moduleSize;
 
@@ -22,13 +21,13 @@ export async function renderQR(ctx, matrix) {
 
     ctx.fillStyle = "#000";
 
-    // Рисуем QR без зон глазок
+    // Рисуем QR без 7×7 зон глазок
     for (let r = 0; r < modules; r++) {
         for (let c = 0; c < modules; c++) {
 
-            const inTopLeft = (r < 9 && c < 9);
-            const inTopRight = (r < 9 && c >= modules - 9);
-            const inBottomLeft = (r >= modules - 9 && c < 9);
+            const inTopLeft = (r < 7 && c < 7);
+            const inTopRight = (r < 7 && c >= modules - 7);
+            const inBottomLeft = (r >= modules - 7 && c < 7);
 
             if (inTopLeft || inTopRight || inBottomLeft) continue;
 
@@ -46,11 +45,14 @@ export async function renderQR(ctx, matrix) {
     // Глазки
     const eye = await loadSvg("./js/eyes/eye.svg");
 
-    const eyeModules = 7;
-    const eyePx = eyeModules * moduleSize;
-    const offset = moduleSize;
+    const eyePx = 7 * moduleSize;
 
-    ctx.drawImage(eye, offset, offset, eyePx, eyePx);
-    ctx.drawImage(eye, canvasSize - offset - eyePx, offset, eyePx, eyePx);
-    ctx.drawImage(eye, offset, canvasSize - offset - eyePx, eyePx, eyePx);
+    // Левый верхний
+    ctx.drawImage(eye, 0, 0, eyePx, eyePx);
+
+    // Правый верхний
+    ctx.drawImage(eye, canvasSize - eyePx, 0, eyePx, eyePx);
+
+    // Левый нижний
+    ctx.drawImage(eye, 0, canvasSize - eyePx, eyePx, eyePx);
 }
