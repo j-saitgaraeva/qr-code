@@ -44,11 +44,8 @@
         }
     </style>
 
-    <!-- ВАЖНО: рабочая библиотека QR -->
+    <!-- Рабочая библиотека QR -->
     <script src="https://cdn.jsdelivr.net/npm/qrjs2/qrjs2.min.js"></script>
-
-    <!-- Наш код — НЕ module -->
-    <script src="./js/main.js"></script>
 </head>
 
 <body>
@@ -62,6 +59,9 @@
     <div id="qr"></div>
 
     <button id="downloadBtn">Скачать</button>
+
+    <!-- ВАЖНО: подключаем здесь, когда DOM уже существует -->
+    <script src="./js/main.js"></script>
 
 </body>
 </html>
