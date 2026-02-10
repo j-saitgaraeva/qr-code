@@ -32,11 +32,9 @@
             justify-content: center;
         }
 
-        /* Внешний размер QR */
         #qr canvas {
             width: 130px;
             height: 130px;
-            display: block;
             image-rendering: pixelated;
         }
 
@@ -45,6 +43,9 @@
             display: none;
         }
     </style>
+
+    <!-- ВАЖНО: новая библиотека -->
+    <script src="https://cdn.jsdelivr.net/npm/qrjs2@0.1.0/qrjs2.min.js"></script>
 </head>
 
 <body>
@@ -59,7 +60,6 @@
 
     <button id="downloadBtn">Скачать</button>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
     <script type="module" src="./js/main-v2.js"></script>
 
 </body>
