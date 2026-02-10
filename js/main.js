@@ -8,13 +8,13 @@ const qrBox = document.getElementById("qr");
 
 let lastPngDataUrl = null;
 
-generateBtn.onclick = () => {
+generateBtn.onclick = async () => {
     const text = input.value.trim();
     if (!text) return;
 
     try {
         const matrix = generateMatrix(text);
-        const png = renderMatrixToPng(matrix, 150);
+        const png = await renderMatrixToPng(matrix, 150);
 
         lastPngDataUrl = png;
 
