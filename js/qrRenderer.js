@@ -1,33 +1,45 @@
-// qrRenderer.js
+// Загружаем SVG глазка и превращаем в <img>
+async function loadSvg(url) {
+    const res = await fetch(url);
+    const text = await res.text();
+    const img = new Image();
+    img.src = "data:image/svg+xml;base64," + btoa(text);
+    await img.decode();
+    return img;
+}
 
-// matrix — это результат generateMatrix(text)
-// containerCanvas — тот canvas, который у тебя уже есть в верстке
-export function renderQR(matrix, containerCanvas) {
+// Основной рендер QR-кода
+export async function renderQR(ctx, matrix) {
     const modules = matrix.length;
 
-    // === ЭТАП 1: рисуем QR пиксель‑перфект на внутреннем canvas ===
+    // === ЭТАП 1: внутренний canvas для пиксель‑перфект QR ===
 
-    // Базовый размер модуля для "честного" рендера
-    const baseModuleSize = 5; // можно 4–6, это только для внутреннего рендера
+    // Базовый размер модуля для честного рендера
+    const baseModuleSize = 5;
+    const internalSize = modules * baseModuleSize;
 
-    const canvasSize = modules * baseModuleSize;
+    const internalCanvas = document.createElement("canvas");
+    internalCanvas.width = internalSize;
+    internalCanvas.height = internalSize;
 
-    const canvas = document.createElement("canvas");
-    canvas.width = canvasSize;
-    canvas.height = canvasSize;
-
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvasSize, canvasSize);
-
-    // Прозрачный фон — ничего не заливаем
+    const internalCtx = internalCanvas.getContext("2d");
+    internalCtx.clearRect(0, 0, internalSize, internalSize);
 
     // Рисуем модули
-    ctx.fillStyle = "#000000";
+    internalCtx.fillStyle = "#000";
 
     for (let r = 0; r < modules; r++) {
         for (let c = 0; c < modules; c++) {
-            if (matrix[r][c]) {
-                ctx.fillRect(
+
+            // Зоны глаз: 9×9 модулей
+            const inTopLeft = (r < 9 && c < 9);
+            const inTopRight = (r < 9 && c >= modules - 9);
+            const inBottomLeft = (r >= modules - 9 && c < 9);
+
+            if (inTopLeft || inTopRight || inBottomLeft) continue;
+
+            if (matrix[r][c] === 1) {
+                internalCtx.fillRect(
                     c * baseModuleSize,
                     r * baseModuleSize,
                     baseModuleSize,
@@ -37,47 +49,58 @@ export function renderQR(matrix, containerCanvas) {
         }
     }
 
-    // === ЭТАП 1.1: вырезаем зоны под глазки (3 finder patterns) ===
-    // Размер finder pattern — 7×7 модулей, плюс 1 модуль разделителя вокруг
-    const eyeSizeModules = 7;
+    // === ЭТАП 1.1: вырезаем зоны под глазки ===
+    const eyeModules = 7;
     const quietModules = 1;
-    const eyeBlockModules = eyeSizeModules + quietModules * 2;
+    const eyeBlockModules = eyeModules + quietModules * 2;
     const eyeBlockSize = eyeBlockModules * baseModuleSize;
 
-    // Левый верхний глаз
-    clearEyeZone(ctx, 0, 0, eyeBlockSize);
-    // Правый верхний глаз
-    clearEyeZone(ctx, canvasSize - eyeBlockSize, 0, eyeBlockSize);
-    // Левый нижний глаз
-    clearEyeZone(ctx, 0, canvasSize - eyeBlockSize, eyeBlockSize);
+    clearEyeZone(internalCtx, 0, 0, eyeBlockSize);
+    clearEyeZone(internalCtx, internalSize - eyeBlockSize, 0, eyeBlockSize);
+    clearEyeZone(internalCtx, 0, internalSize - eyeBlockSize, eyeBlockSize);
 
-    // === ЭТАП 1.2: рисуем SVG‑глазки поверх (если они у тебя есть) ===
-    // Здесь я оставляю заглушку — ты подставишь свой код вставки SVG
-    // drawEye(ctx, x, y, eyeBlockSize);
-    // ...
+    // === ЭТАП 1.2: вставляем SVG‑глазки ===
+    const eye = await loadSvg("./js/eyes/eye.svg");
 
-    // === ЭТАП 2: Масштабируем готовый QR до фиксированного размера ===
+    const eyePx = eyeModules * baseModuleSize;
+    const offset = baseModuleSize; // 1 модуль разделителя
 
-    const finalSize = 130; // Желаемый итоговый размер QR-кода
+    // Левый верхний
+    internalCtx.drawImage(eye, offset, offset, eyePx, eyePx);
 
-    // Привязываем итог к твоему основному canvas из верстки
-    const finalCanvas = containerCanvas || document.createElement("canvas");
-    finalCanvas.width = finalSize;
-    finalCanvas.height = finalSize;
-
-    const finalCtx = finalCanvas.getContext("2d");
-    finalCtx.clearRect(0, 0, finalSize, finalSize);
-
-    // ВАЖНО: отключаем сглаживание, чтобы не было мыла
-    finalCtx.imageSmoothingEnabled = false;
-
-    finalCtx.drawImage(
-        canvas,          // исходный QR
-        0, 0, canvasSize, canvasSize,   // что берём
-        0, 0, finalSize, finalSize      // куда и как масштабируем
+    // Правый верхний
+    internalCtx.drawImage(
+        eye,
+        internalSize - offset - eyePx,
+        offset,
+        eyePx,
+        eyePx
     );
 
-    return finalCanvas;
+    // Левый нижний
+    internalCtx.drawImage(
+        eye,
+        offset,
+        internalSize - offset - eyePx,
+        eyePx,
+        eyePx
+    );
+
+    // === ЭТАП 2: Масштабирование в твой DOM‑canvas до фиксированного размера ===
+
+    const finalSize = 130; // фиксированный итоговый размер
+
+    ctx.canvas.width = finalSize;
+    ctx.canvas.height = finalSize;
+
+    ctx.clearRect(0, 0, finalSize, finalSize);
+    ctx.imageSmoothingEnabled = false; // чтобы не было мыла
+
+    ctx.drawImage(
+        internalCanvas,
+        0, 0, internalSize, internalSize,
+        0, 0, finalSize, finalSize
+    );
 }
 
 // Вспомогательная функция: очистка зоны под глазок
