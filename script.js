@@ -3,30 +3,26 @@ const qrCode = new QRCodeStyling({
   width: 320,
   height: 320,
   type: "png",
-  data: "https://example.com", // дефолт, пока пользователь не ввёл ссылку
+  data: "https://example.com",
   margin: 0,
   qrOptions: {
-    // H = 30% коррекции — гарантированно выдержит лого до 25% площади
-    errorCorrectionLevel: "H"
+    errorCorrectionLevel: "H",     // для лого
+    typeNumber: 10                 // ← убирает отступ!
   },
   backgroundOptions: {
-    // полностью прозрачный фон
     color: "rgba(0,0,0,0)"
   },
   dotsOptions: {
-    // квадратный паттерн модулей, как классический QR
     type: "square",
     color: "#222222"
   },
-  // Рамка глазков — максимально «жирный» скруглённый квадрат
   cornersSquareOptions: {
     type: "extra-rounded",
     color: "#222222"
   },
-  // Центр глазков — твой любимый вариант
   cornersDotOptions: {
     type: "extra-rounded",
-    color: "222222"
+    color: "#222222"
   }
 });
 
@@ -36,7 +32,6 @@ qrCode.append(container);
 const input = document.getElementById("url-input");
 const downloadBtn = document.getElementById("download-btn");
 
-// Обновляем данные и сразу скачиваем PNG
 downloadBtn.addEventListener("click", async () => {
   const raw = (input.value || "").trim();
 
@@ -46,7 +41,6 @@ downloadBtn.addEventListener("click", async () => {
     return;
   }
 
-  // Если пользователь не указал схему, добавляем https://
   const url =
     /^https?:\/\//i.test(raw) || /^mailto:/i.test(raw) ? raw : "https://" + raw;
 
