@@ -1,60 +1,99 @@
-// Настройки QR с фиксированным стилем
+// =====================================================
+// 1. НАСТРОЙКА QR КОДА (создаём объект QRCodeStyling)
+// =====================================================
 const qrCode = new QRCodeStyling({
+  
+  // Размер canvas'а (320x320 пикселей) — итоговый PNG будет такого размера
   width: 320,
   height: 320,
+  
+  // Формат по умолчанию для скачивания
   type: "png",
-  data: "https://example.com", 
+  
+  // Начальные данные (пока пользователь не введёт ссылку)
+  data: "https://example.com",
+  
+  // ← КЛЮЧЕВОЙ ПАРАМЕТР: убирает белый/прозрачный отступ вокруг QR
   margin: 0,
+  
+  // НАСТРОЙКИ QR АЛГОРИТМА
   qrOptions: {
-    errorCorrectionLevel: "M" 
+    // Уровень коррекции ошибок:
+    // M = 15% (отлично для обычных QR)
+    // H = 30% (для QR с логотипом до 25% площади)
+    errorCorrectionLevel: "M"
   },
+  
+  // ФОН — ПРАЗРАЧНЫЙ (важно для наложения лого потом)
   backgroundOptions: {
-    color: "rgba(0,0,0,0)" 
+    color: "rgba(0,0,0,0)"
   },
+  
+  // ОСНОВНОЙ ПАТТЕРН (квадратики внутри QR)
   dotsOptions: {
-    type: "square", 
-    color: "#000000"
+    type: "square",    // классические квадратные модули
+    color: "222222"   // чёрный цвет
   },
+  
+  // РАМКА ГЛАЗКОВ (внешний контур угловых маркеров)
   cornersSquareOptions: {
-    type: "rounded", 
-    color: "#000000"
+    type: "classy-rounded",   // скруглённый квадрат (без extra-rounded — не создаёт отступ)
+    color: "#222222"
   },
+  
+  // ЦЕНТР ГЛАЗКОВ (внутренний элемент угловых маркеров)
   cornersDotOptions: {
-    type: "rounded", 
-    color: "#000000"
+    type: "classy-rounded",   // скруглённый квадрат (без classy — не создаёт отступ)
+    color: "#222222"
   }
 });
 
+// =====================================================
+// 2. ВСТАВЛЯЕМ QR В HTML КОНТЕЙНЕР
+// =====================================================
 const container = document.getElementById("qr-container");
-qrCode.append(container);
+qrCode.append(container);  // QR появляется на странице
 
-const input = document.getElementById("url-input");
-const downloadBtn = document.getElementById("download-btn");
+// =====================================================
+// 3. ПОЛУЧАЕМ ЭЛЕМЕНТЫ ИНТЕРФЕЙСА
+// =====================================================
+const input = document.getElementById("url-input");      // поле ввода ссылки
+const downloadBtn = document.getElementById("download-btn"); // кнопка "Скачать"
 
+// =====================================================
+// 4. ОБРАБОТЧИК КНОПКИ "СКАЧАТЬ"
+// =====================================================
 downloadBtn.addEventListener("click", async () => {
+  
+  // Получаем текст из поля ввода
   const value = (input.value || "").trim();
 
+  // Проверяем, что поле не пустое
   if (!value) {
     alert("Пожалуйста, введите ссылку.");
-    input.focus();
+    input.focus();  // фокус обратно в поле
     return;
   }
 
+  // НОРМАЛИЗУЕМ ССЫЛКУ (добавляем https:// если нет протокола)
   const url =
     /^https?:\/\//i.test(value) || /^mailto:/i.test(value)
       ? value
       : "https://" + value;
 
+  // ОБНОВЛЯЕМ QR КОД новыми данными
   qrCode.update({
     data: url
   });
 
+  // СКАЧИВАЕМ PNG
   try {
     await qrCode.download({
-      extension: "png",
-      name: "qr-link"
+      extension: "png",     // формат файла
+      name: "qr-link"       // имя файла (qr-link.png)
     });
   } catch (e) {
+    // Обработка ошибок скачивания
     console.error(e);
     alert("Не удалось скачать QR‑код. Попробуйте ещё раз.");
   }
