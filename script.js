@@ -43,7 +43,7 @@ const qrCode = new QRCodeStyling({
   
   // ЦЕНТР ГЛАЗКОВ (внутренний элемент угловых маркеров)
   cornersDotOptions: {
-    type: "classy", // классические квадратные модули
+    type: "square", // классические квадратные модули
     color: "#222222"
   }
 });
