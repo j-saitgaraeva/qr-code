@@ -1,12 +1,15 @@
 // =====================================================
-// 1. НАСТРОЙКА QR КОДА (создаём объект QRCodeStyling)
+// БАЗОВАЯ НАСТРОЙКА (твоя рабочая версия)
 // =====================================================
 let qrCode;
 
-function createQR(data = "https://example.com") {
+function createQR(data = "https://example.com", dynamicSize = true) {
+  // Если короткая ссылка — делаем маленький canvas
+  const size = dynamicSize && data.length < 30 ? 280 : 320;
+  
   qrCode = new QRCodeStyling({
-    width: 320,
-    height: 320,
+    width: size,
+    height: size,
     type: "png",
     data: data,
     margin: 0,
@@ -35,17 +38,14 @@ function createQR(data = "https://example.com") {
   qrCode.append(container);
 }
 
+// Начальный QR
 createQR();
 
-// =====================================================
-// 2. ЭЛЕМЕНТЫ ИНТЕРФЕЙСА
-// =====================================================
+// ЭЛЕМЕНТЫ
 const input = document.getElementById("url-input");
 const downloadBtn = document.getElementById("download-btn");
 
-// =====================================================
-// 3. ОБРАБОТЧИК КНОПКИ (ИСПРАВЛЕННАЯ СТРОКА)
-// =====================================================
+// ОБРАБОТЧИК
 downloadBtn.addEventListener("click", async () => {
   const value = (input.value || "").trim();
 
@@ -55,14 +55,15 @@ downloadBtn.addEventListener("click", async () => {
     return;
   }
 
-  // ← ИСПРАВЛЕНО: один слеш вместо двух
   const url =
     /^https?:\/\//i.test(value) || /^mailto:/i.test(value)
       ? value
       : "https://" + value;
 
-  createQR(url);
+  // ДИНАМИЧЕСКИЙ РАЗМЕР ПО ДЛИНЕ ССЫЛКИ
+  createQR(url, true);
 
+  // Скачиваем с задержкой
   setTimeout(async () => {
     try {
       await qrCode.download({
