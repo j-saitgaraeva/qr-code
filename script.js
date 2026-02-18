@@ -1,92 +1,116 @@
 // =====================================================
-// 1. НАСТРОЙКА QR КОДА С H КОРЕКЦИЕЙ (для большого лого)
+// 1. НАСТРОЙКА QR (H коррекция + твои стили #222222)
 // =====================================================
-let qrCode;
+const qrCode = new QRCodeStyling({
+  width: 320,
+  height: 320,
+  type: "canvas",  // ← важно для обрезки
+  data: "https://example.com",
+  margin: 0,
+  qrOptions: {
+    errorCorrectionLevel: "H"  // 30% для большого лого
+  },
+  backgroundOptions: {
+    color: "rgba(0,0,0,0)"     // прозрачный фон
+  },
+  dotsOptions: {
+    type: "square",
+    color: "#222222"            // твой цвет
+  },
+  cornersSquareOptions: {
+    type: "extra-rounded",
+    color: "#222222"
+  },
+  cornersDotOptions: {
+    type: "square",
+    color: "#222222"
+  }
+});
 
-function createQR(data = "https://example.com", dynamicSize = true) {
-  // Динамический размер canvas по длине ссылки
-  const size = dynamicSize && data.length < 30 ? 280 : 320;
-  
-  qrCode = new QRCodeStyling({
-    // ДИНАМИЧЕСКИЙ РАЗМЕР — убирает отступы
-    width: size,
-    height: size,
-    
-    type: "png",
-    data: data,
-    
-    // КЛЮЧЕВОЙ ПАРАМЕТР — без отступов библиотеки
-    margin: 0,
-    
-    // H = 30% коррекции — для ЛОГО до 25% площади!
-    qrOptions: {
-      errorCorrectionLevel: "H"
-    },
-    
-    // Прозрачный фон для наложения лого
-    backgroundOptions: {
-      color: "rgba(0,0,0,0)"
-    },
-    
-    // Твои настройки стиля (из базовой версии)
-    dotsOptions: {
-      type: "square",
-      color: "#222222"
-    },
-    cornersSquareOptions: {
-      type: "extra-rounded",
-      color: "#222222"
-    },
-    cornersDotOptions: {
-      type: "square",
-      color: "#222222"
-    }
-  });
-  
-  const container = document.getElementById("qr-container");
-  container.innerHTML = ""; // очищаем старый QR
-  qrCode.append(container);
-}
+const container = document.getElementById("qr-container");
+qrCode.append(container);
 
-// Создаём начальный QR
-createQR();
-
-// =====================================================
-// 2. ЭЛЕМЕНТЫ ИНТЕРФЕЙСА
-// =====================================================
 const input = document.getElementById("url-input");
 const downloadBtn = document.getElementById("download-btn");
 
 // =====================================================
-// 3. ОБРАБОТЧИК КНОПКИ "СКАЧАТЬ"
+// 2. АВТООБРЕЗКА CANVAS (убирает все отступы)
+// =====================================================
+function cropCanvas(canvas) {
+  const ctx = canvas.getContext('2d');
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  
+  // Ищем границы непрозрачных пикселей (альфа > 10)
+  let top = canvas.height, bottom = 0, left = canvas.width, right = 0;
+  
+  for (let y = 0; y < canvas.height; y++) {
+    for (let x = 0; x < canvas.width; x++) {
+      const i = (y * canvas.width + x) * 4;
+      if (data[i + 3] > 10) { // QR пиксель (альфа > 10)
+        top = Math.min(top, y);
+        bottom = Math.max(bottom, y);
+        left = Math.min(left, x);
+        right = Math.max(right, x);
+      }
+    }
+  }
+  
+  // Новый canvas только с QR (без отступов)
+  const croppedWidth = right - left + 1;
+  const croppedHeight = bottom - top + 1;
+  const croppedCanvas = document.createElement('canvas');
+  croppedCanvas.width = croppedWidth;
+  croppedCanvas.height = croppedHeight;
+  croppedCanvas.getContext('2d').drawImage(
+    canvas, 
+    left, top, croppedWidth, croppedHeight,
+    0, 0, croppedWidth, croppedHeight
+  );
+  
+  return croppedCanvas;
+}
+
+// =====================================================
+// 3. ОБРАБОТЧИК КНОПКИ (генерация + обрезка + скачивание)
 // =====================================================
 downloadBtn.addEventListener("click", async () => {
   const value = (input.value || "").trim();
-
+  
   if (!value) {
     alert("Пожалуйста, введите ссылку.");
     input.focus();
     return;
   }
 
+  // Нормализуем ссылку
   const url =
-    /^https?:\/\//i.test(value) || /^mailto:/i.test(value)
+    /^https?:\\\\/\\//i.test(value) || /^mailto:/i.test(value)
       ? value
       : "https://" + value;
 
-  // ГЕНЕРИРУЕМ QR с динамическим размером + H коррекцией
-  createQR(url, true);
+  // Обновляем QR
+  qrCode.update({ data: url });
 
-  // Скачиваем после отрисовки
-  setTimeout(async () => {
-    try {
-      await qrCode.download({
-        extension: "png",
-        name: "qr-link"
-      });
-    } catch (e) {
-      console.error(e);
-      alert("Не удалось скачать QR‑код. Попробуйте ещё раз.");
+  // Ждём отрисовки → обрезаем → скачиваем
+  setTimeout(() => {
+    const canvas = document.querySelector('#qr-container canvas');
+    if (canvas) {
+      const croppedCanvas = cropCanvas(canvas);
+      
+      // Скачиваем идеальный PNG без отступов
+      croppedCanvas.toBlob((blob) => {
+        const downloadUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = 'qr-link.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(downloadUrl);
+      }, 'image/png');
+    } else {
+      alert("Ошибка генерации QR. Попробуйте ещё раз.");
     }
-  }, 100);
+  }, 200);
 });
