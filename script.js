@@ -1,117 +1,69 @@
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+// Базовые настройки QR с фиксированным стилем глазков
+const qrCode = new QRCodeStyling({
+  width: 320,
+  height: 320,
+  type: "png",
+  data: "https://example.com", // дефолт, пока пользователь не ввёл ссылку
+  margin: 0,
+  qrOptions: {
+    // баланс между надёжностью и размером файла
+    errorCorrectionLevel: "M"
+  },
+  backgroundOptions: {
+    // полностью прозрачный фон
+    color: "rgba(0,0,0,0)"
+  },
+  dotsOptions: {
+    // квадратный паттерн модулей, как классический QR
+    type: "square",
+    color: "#000000"
+  },
+  // Рамка глазков — максимально «жирный» скруглённый квадрат
+  cornersSquareOptions: {
+    /**
+     * Поддерживаемые типы зависят от версии библиотеки.
+     * Здесь ставим extra-rounded (или rounded, если extra-rounded не сработает).
+     * Это создаёт рамку с сильным радиусом, похожим на твой SVG.
+     */
+    type: "extra-rounded",
+    color: "#000000"
+  },
+  // Центр глазков — скруглённый «квадратик»
+  cornersDotOptions: {
+    type: "rounded",
+    color: "#000000"
+  }
+});
 
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
-  background: #f5f5f7;
-  color: #111827;
-}
+const container = document.getElementById("qr-container");
+qrCode.append(container);
 
-.app {
-  max-width: 420px;
-  margin: 40px auto;
-  padding: 24px 20px 32px;
-  background: #ffffff;
-  border-radius: 20px;
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
-}
+const input = document.getElementById("url-input");
+const downloadBtn = document.getElementById("download-btn");
 
-.title {
-  margin: 0 0 20px;
-  font-size: 24px;
-  font-weight: 600;
-}
+// Обновляем данные и сразу скачиваем PNG
+downloadBtn.addEventListener("click", async () => {
+  const raw = (input.value || "").trim();
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-
-.field-label {
-  font-size: 14px;
-  color: #4b5563;
-}
-
-#url-input {
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-#url-input:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.2);
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 16px;
-  border-radius: 999px;
-  border: none;
-  background: #111827;
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease,
-    background-color 0.12s ease;
-}
-
-.btn:hover {
-  background: #020617;
-  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.25);
-  transform: translateY(-1px);
-}
-
-.btn:active {
-  box-shadow: none;
-  transform: translateY(0);
-}
-
-.preview-wrapper {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.qr-container {
-  display: inline-block;
-  padding: 12px;
-  border-radius: 24px;
-  background: #f9fafb;
-}
-
-.hint {
-  margin: 8px 0 0;
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.footer {
-  margin-top: 24px;
-  font-size: 11px;
-  color: #9ca3af;
-  text-align: center;
-}
-
-@media (max-width: 480px) {
-  .app {
-    margin: 16px;
-    padding: 20px 16px 24px;
+  if (!raw) {
+    alert("Пожалуйста, введите ссылку.");
+    input.focus();
+    return;
   }
 
-  .title {
-    font-size: 20px;
+  // Если пользователь не указал схему, добавляем https://
+  const url =
+    /^https?:\/\//i.test(raw) || /^mailto:/i.test(raw) ? raw : "https://" + raw;
+
+  qrCode.update({ data: url });
+
+  try {
+    await qrCode.download({
+      name: "qr-link",
+      extension: "png"
+    });
+  } catch (err) {
+    console.error(err);
+    alert("Не удалось скачать QR‑код. Попробуйте ещё раз.");
   }
-}
+});
