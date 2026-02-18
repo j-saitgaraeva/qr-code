@@ -1,24 +1,34 @@
 // =====================================================
-// БАЗОВАЯ НАСТРОЙКА (твоя рабочая версия)
+// 1. НАСТРОЙКА QR КОДА С H КОРЕКЦИЕЙ (для большого лого)
 // =====================================================
 let qrCode;
 
 function createQR(data = "https://example.com", dynamicSize = true) {
-  // Если короткая ссылка — делаем маленький canvas
+  // Динамический размер canvas по длине ссылки
   const size = dynamicSize && data.length < 30 ? 280 : 320;
   
   qrCode = new QRCodeStyling({
+    // ДИНАМИЧЕСКИЙ РАЗМЕР — убирает отступы
     width: size,
     height: size,
+    
     type: "png",
     data: data,
+    
+    // КЛЮЧЕВОЙ ПАРАМЕТР — без отступов библиотеки
     margin: 0,
+    
+    // H = 30% коррекции — для ЛОГО до 25% площади!
     qrOptions: {
-      errorCorrectionLevel: "M"
+      errorCorrectionLevel: "H"
     },
+    
+    // Прозрачный фон для наложения лого
     backgroundOptions: {
       color: "rgba(0,0,0,0)"
     },
+    
+    // Твои настройки стиля (из базовой версии)
     dotsOptions: {
       type: "square",
       color: "#222222"
@@ -34,18 +44,22 @@ function createQR(data = "https://example.com", dynamicSize = true) {
   });
   
   const container = document.getElementById("qr-container");
-  container.innerHTML = "";
+  container.innerHTML = ""; // очищаем старый QR
   qrCode.append(container);
 }
 
-// Начальный QR
+// Создаём начальный QR
 createQR();
 
-// ЭЛЕМЕНТЫ
+// =====================================================
+// 2. ЭЛЕМЕНТЫ ИНТЕРФЕЙСА
+// =====================================================
 const input = document.getElementById("url-input");
 const downloadBtn = document.getElementById("download-btn");
 
-// ОБРАБОТЧИК
+// =====================================================
+// 3. ОБРАБОТЧИК КНОПКИ "СКАЧАТЬ"
+// =====================================================
 downloadBtn.addEventListener("click", async () => {
   const value = (input.value || "").trim();
 
@@ -60,10 +74,10 @@ downloadBtn.addEventListener("click", async () => {
       ? value
       : "https://" + value;
 
-  // ДИНАМИЧЕСКИЙ РАЗМЕР ПО ДЛИНЕ ССЫЛКИ
+  // ГЕНЕРИРУЕМ QR с динамическим размером + H коррекцией
   createQR(url, true);
 
-  // Скачиваем с задержкой
+  // Скачиваем после отрисовки
   setTimeout(async () => {
     try {
       await qrCode.download({
