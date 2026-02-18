@@ -30,7 +30,7 @@ const qrCode = new QRCodeStyling({
   },
   // Центр глазков — скруглённый квадрат
   cornersDotOptions: {
-    type: "classy-rounded", // было "rounded", "square", "classy"
+    type: "extra-rounded", // было "rounded", "square", "classy", "classy-rounded"
     color: "#000000"
   }
 });
