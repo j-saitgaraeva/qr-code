@@ -1,4 +1,4 @@
-// Базовые настройки QR с фиксированным стилем глазков
+// Настройки QR с H коррекцией И без рамки
 const qrCode = new QRCodeStyling({
   width: 320,
   height: 320,
@@ -6,21 +6,21 @@ const qrCode = new QRCodeStyling({
   data: "https://example.com",
   margin: 0,
   qrOptions: {
-    errorCorrectionLevel: "H"  // для лого (30% коррекции)
+    errorCorrectionLevel: "H"  // ← большой запас для лого
   },
   backgroundOptions: {
-    color: "rgba(0,0,0,0)"  // прозрачный фон
+    color: "rgba(0,0,0,0)"
   },
   dotsOptions: {
     type: "square",
     color: "#222222"
   },
   cornersSquareOptions: {
-    type: "extra-rounded",
+    type: "extra-rounded",  // ← как в первой версии (без extra-rounded)
     color: "#222222"
   },
   cornersDotOptions: {
-    type: "extra-rounded",
+    type: "extra-rounded",  // ← как в первой версии
     color: "#222222"
   }
 });
@@ -31,28 +31,31 @@ qrCode.append(container);
 const input = document.getElementById("url-input");
 const downloadBtn = document.getElementById("download-btn");
 
-// Обновляем данные и скачиваем PNG
 downloadBtn.addEventListener("click", async () => {
-  const raw = (input.value || "").trim();
+  const value = (input.value || "").trim();
 
-  if (!raw) {
+  if (!value) {
     alert("Пожалуйста, введите ссылку.");
     input.focus();
     return;
   }
 
   const url =
-    /^https?:\/\//i.test(raw) || /^mailto:/i.test(raw) ? raw : "https://" + raw;
+    /^https?:\/\//i.test(value) || /^mailto:/i.test(value)
+      ? value
+      : "https://" + value;
 
-  qrCode.update({ data: url });
+  qrCode.update({
+    data: url
+  });
 
   try {
     await qrCode.download({
-      name: "qr-link",
-      extension: "png"
+      extension: "png",
+      name: "qr-link"
     });
-  } catch (err) {
-    console.error(err);
+  } catch (e) {
+    console.error(e);
     alert("Не удалось скачать QR‑код. Попробуйте ещё раз.");
   }
 });
