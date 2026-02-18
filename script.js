@@ -25,12 +25,12 @@ const qrCode = new QRCodeStyling({
      * Здесь ставим extra-rounded (или rounded, если extra-rounded не сработает).
      * Это создаёт рамку с сильным радиусом, похожим на твой SVG.
      */
-    type: "classy-rounded", // было "extra-rounded"
+    type: "square", // было "extra-rounded", "classy-rounded"
     color: "#000000"
   },
   // Центр глазков — скруглённый квадрат
   cornersDotOptions: {
-    type: "classy-rounded", // было "rounded", "square", "classy", "classy-rounded", "extra-rounded"
+    type: "square", // было "rounded", "square", "classy", "classy-rounded", "extra-rounded"
     color: "#000000"
   }
 });
