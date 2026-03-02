@@ -72,7 +72,7 @@ function cropCanvas(canvas) {
 }
 
 // =====================================================
-// 3. ОБРАБОТЧИК КНОПКИ (генерация + обрезка + скачивание)
+// 3. ОБРАБОТЧИК КНОПКИ (генерация + обрезка + ИМЯ ФАЙЛА)
 // =====================================================
 downloadBtn.addEventListener("click", async () => {
   const value = (input.value || "").trim();
@@ -83,10 +83,8 @@ downloadBtn.addEventListener("click", async () => {
     return;
   }
 
-  // ✅ ИСПРАВЛЕНО: правильное экранирование слешей
-  const url = /^https?:\/\//i.test(value) || /^mailto:/i.test(value)
-    ? value
-    : "https://" + value;
+  // Нормализуем ссылку для QR
+  const url = /^https?:\/\//i.test(value) ? value : "https://" + value;
 
   // Обновляем QR
   qrCode.update({ data: url });
@@ -97,12 +95,26 @@ downloadBtn.addEventListener("click", async () => {
     if (canvas) {
       const croppedCanvas = cropCanvas(canvas);
       
-      // Скачиваем идеальный PNG без отступов
+      // 🎯 УМНОЕ ИМЯ ФАЙЛА ИЗ ССЫЛКИ
+      const fullUrl = input.value.trim();
+      let fileName = 'qr-link.png';
+      
+      if (fullUrl) {
+        const cleanName = fullUrl
+          .replace(/^https?:\/\//i, '')  // Убираем https:// 
+          .replace(/[^a-zA-Z0-9\-._]/g, '-')  // Безопасные символы
+          .substring(0, 40);  // Макс 40 символов
+          
+        fileName = cleanName || 'link';
+        fileName += '.png';
+      }
+      
+      // Скачиваем с новым именем
       croppedCanvas.toBlob((blob) => {
         const downloadUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = downloadUrl;
-        a.download = 'qr-link.png';
+        a.download = fileName;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
