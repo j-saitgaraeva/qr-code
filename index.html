@@ -1,41 +1,37 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>QR Generator</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="styles.css" />
-  <!-- qr-code-styling через CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0/lib/qr-code-styling.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.8.0/lib/qr-code-styling.js"></script>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="app">
-    <h1 class="title">QR‑код из ссылки</h1>
-
-    <label class="field">
-      <span class="field-label">Вставьте ссылку</span>
-      <input
-        id="url-input"
-        type="url"
-        placeholder="https://example.com"
-        autocomplete="off"
-      />
-    </label>
-
-    <button id="download-btn" class="btn">Скачать PNG</button>
-
-    <div class="preview-wrapper">
-      <div id="qr-container" class="qr-container"></div>
-      <p class="hint">
-        Введите ссылку и нажмите «Скачать». PNG будет с прозрачным фоном.
-      </p>
+  <main class="app">
+    <h1 class="title">Генератор QR-кодов</h1>
+    
+    <!-- ✅ ИНПУТ С КРЕСТИКОМ -->
+    <div class="input-wrapper">
+      <div class="field">
+        <input type="text" id="url-input" placeholder="Вставьте ссылку">
+      </div>
+      <button id="clear-btn" class="clear-btn" title="Очистить">×</button>
     </div>
-
-    <p class="footer">
-      Хостинг: GitHub Pages. Код без бэкенда, только HTML/CSS/JS.
-    </p>
-  </div>
+    
+    <button id="download-btn" class="btn">Скачать</button>
+    
+    <div class="preview-wrapper">
+      <div class="qr-container">
+        <div id="qr-container"></div>
+      </div>
+      <div class="hint">
+        Формат PNG · Прозрачный фон · Цвет #222222 · Уровень коррекции ошибок H
+      </div>
+    </div>
+  </main>
 
   <script src="script.js"></script>
 </body>
 </html>
+
