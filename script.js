@@ -1,6 +1,6 @@
-// =====================================================
-// 1. НАСТРОЙКА QR (СЕРЫЙ по умолчанию #CFCFD9)
-// =====================================================
+// ===============================
+// 1. НАСТРОЙКА QR (серый по умолчанию)
+// ===============================
 const qrCode = new QRCodeStyling({
   width: 320,
   height: 320,
@@ -37,15 +37,16 @@ const errorEl = document.getElementById("char-error");
 
 const MAX_LENGTH = 2000;
 
-// =====================================================
-// 2. УПРАВЛЕНИЕ ПОЛЕМ, КРЕСТИКОМ, КНОПКОЙ, QR И ОШИБКОЙ
-// =====================================================
-function updateInputState(value) {
+// ===============================
+// 2. Состояние поля, ошибки и QR
+// ===============================
+function updateInputState(rawValue) {
+  const value = rawValue.trim(); // убираем пробелы по краям
   const length = value.length;
-  const hasValue = value.trim().length > 0;
+  const hasValue = length > 0;
   const isTooLong = length > MAX_LENGTH;
 
-  // Сообщение об ошибке + красная рамка
+  // сообщение об ошибке + красная рамка
   if (isTooLong) {
     errorEl.textContent = `Достигнут лимит по символам: ${MAX_LENGTH}`;
     errorEl.style.display = "block";
@@ -56,15 +57,15 @@ function updateInputState(value) {
     input.classList.remove("error");
   }
 
-  // Кнопка скачивания: активна только если есть текст и нет превышения лимита
+  // кнопка скачивания
   const canDownload = hasValue && !isTooLong;
   downloadBtn.disabled = !canDownload;
   downloadBtn.classList.toggle("btn-disabled", !canDownload);
 
-  // Крестик виден только если есть какой-то текст (даже при ошибке)
+  // крестик
   clearBtn.style.display = hasValue ? "flex" : "none";
 
-  // Сброс QR на серый при пустом поле
+  // сброс QR на серый, если строки по факту нет
   if (!hasValue) {
     qrCode.update({
       data: "https://example.com",
@@ -75,15 +76,18 @@ function updateInputState(value) {
   }
 }
 
-// =====================================================
-// 3. АВТООБРЕЗКА CANVAS
-// =====================================================
+// ===============================
+// 3. Автообрезка canvas
+// ===============================
 function cropCanvas(canvas) {
   const ctx = canvas.getContext("2d");
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
 
-  let top = canvas.height, bottom = 0, left = canvas.width, right = 0;
+  let top = canvas.height;
+  let bottom = 0;
+  let left = canvas.width;
+  let right = 0;
 
   for (let y = 0; y < canvas.height; y++) {
     for (let x = 0; x < canvas.width; x++) {
@@ -102,7 +106,9 @@ function cropCanvas(canvas) {
   const croppedCanvas = document.createElement("canvas");
   croppedCanvas.width = croppedWidth;
   croppedCanvas.height = croppedHeight;
-  croppedCanvas.getContext("2d").drawImage(
+
+  const croppedCtx = croppedCanvas.getContext("2d");
+  croppedCtx.drawImage(
     canvas,
     left,
     top,
@@ -117,13 +123,45 @@ function cropCanvas(canvas) {
   return croppedCanvas;
 }
 
-// =====================================================
-// 4. ОБРАБОТЧИКИ ВВОДА И КРЕСТИКА
-// =====================================================
+// ===============================
+// 4. Обработчики ввода (запрет пробелов по краям) и крестика
+// ===============================
+
+// живой ввод: убираем пробелы/таб/переводы строк в начале и конце
 input.addEventListener("input", () => {
+  const before = input.value;
+  const trimmedEdges = before.replace(/^\s+|\s+$/g, "");
+
+  if (before !== trimmedEdges) {
+    input.value = trimmedEdges;
+    // курсор в конец строки (самый понятный вариант для URL)
+    input.setSelectionRange(trimmedEdges.length, trimmedEdges.length);
+  }
+
   updateInputState(input.value);
 });
 
+// вставка: обрезаем пробелы по краям вставляемого текста
+input.addEventListener("paste", (event) => {
+  event.preventDefault();
+  const pasted = (event.clipboardData || window.clipboardData)
+    .getData("text")
+    .trim();
+
+  const start = input.selectionStart;
+  const end = input.selectionEnd;
+  const current = input.value;
+
+  const nextValue = current.slice(0, start) + pasted + current.slice(end);
+  input.value = nextValue;
+
+  const caretPos = start + pasted.length;
+  input.setSelectionRange(caretPos, caretPos);
+
+  updateInputState(input.value);
+});
+
+// крестик
 clearBtn.addEventListener("click", (e) => {
   e.preventDefault();
   input.value = "";
@@ -131,14 +169,14 @@ clearBtn.addEventListener("click", (e) => {
   updateInputState("");
 });
 
-// Инициализация состояния
+// начальное состояние
 updateInputState("");
 
-// =====================================================
-// 5. КНОПКА СКАЧИВАНИЯ
-// =====================================================
-downloadBtn.addEventListener("click", async () => {
-  const value = input.value.trim();
+// ===============================
+// 5. Кнопка скачивания PNG
+// ===============================
+downloadBtn.addEventListener("click", () => {
+  const value = input.value.trim(); // защита от случайных пробелов
 
   if (!value) {
     alert("Пожалуйста, введите ссылку.");
@@ -153,7 +191,7 @@ downloadBtn.addEventListener("click", async () => {
 
   const url = /^https?:\/\//i.test(value) ? value : "https://" + value;
 
-  // Чёрный QR
+  // делаем QR чёрным под скачивание
   qrCode.update({
     data: url,
     dotsOptions: { color: "#222222" },
@@ -161,30 +199,32 @@ downloadBtn.addEventListener("click", async () => {
     cornersDotOptions: { color: "#222222" }
   });
 
+  // даём QR библиотеке время перерисоваться
   setTimeout(() => {
     const canvas = document.querySelector("#qr-container canvas");
-    if (canvas) {
-      const croppedCanvas = cropCanvas(canvas);
+    if (!canvas) return;
 
-      let fileName = "qr-link.png";
-      if (value) {
-        const cleanName = value
-          .replace(/^https?:\/\//i, "")
-          .replace(/[^a-zA-Z0-9\-._]/g, "-")
-          .substring(0, 35);
-        fileName = "qr-" + (cleanName || "link") + ".png";
-      }
+    const croppedCanvas = cropCanvas(canvas);
 
-      croppedCanvas.toBlob((blob) => {
-        const downloadUrl = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = downloadUrl;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(downloadUrl);
-      }, "image/png");
+    let fileName = "qr-link.png";
+    if (value) {
+      const cleanName = value
+        .replace(/^https?:\/\//i, "")
+        .replace(/[^a-zA-Z0-9\-._]/g, "-")
+        .substring(0, 35);
+      fileName = "qr-" + (cleanName || "link") + ".png";
     }
+
+    croppedCanvas.toBlob((blob) => {
+      if (!blob) return;
+      const downloadUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(downloadUrl);
+    }, "image/png");
   }, 200);
 });
