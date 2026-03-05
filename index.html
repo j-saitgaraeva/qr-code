@@ -10,17 +10,24 @@
 <body>
   <main class="app">
     <h1 class="title">Генератор QR-кодов</h1>
-    
-    <!-- ✅ ИНПУТ С КРЕСТИКОМ -->
+
+    <!-- Инпут с крестиком -->
     <div class="input-wrapper">
       <div class="field">
-        <input type="text" id="url-input" placeholder="Вставьте ссылку">
+        <input
+          type="text"
+          id="url-input"
+          placeholder="Вставьте ссылку"
+        >
       </div>
       <button id="clear-btn" class="clear-btn" title="Очистить">×</button>
     </div>
-    
+
+    <!-- Сообщение об ошибке длины -->
+    <p id="char-error" class="char-error"></p>
+
     <button id="download-btn" class="btn">Скачать</button>
-    
+
     <div class="preview-wrapper">
       <div class="qr-container">
         <div id="qr-container"></div>
@@ -34,4 +41,3 @@
   <script src="script.js"></script>
 </body>
 </html>
-
