@@ -5,7 +5,7 @@ const qrCode = new QRCodeStyling({
   width: 320,
   height: 320,
   type: "canvas",
-  data: "https://example.com",
+  data: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
   margin: 0,
   qrOptions: {
     errorCorrectionLevel: "H"
@@ -68,7 +68,7 @@ function updateInputState(rawValue) {
   // сброс QR на серый, если строки по факту нет
   if (!hasValue) {
     qrCode.update({
-      data: "https://example.com",
+      data: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
       dotsOptions: { color: "#CFCFD9" },
       cornersSquareOptions: { color: "#CFCFD9" },
       cornersDotOptions: { color: "#CFCFD9" }
